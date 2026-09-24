@@ -5,36 +5,183 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Checador de Duplicados</title>
 <style>
-  body {
-    background: #191919;
-    color: #e9e9e7;
-    font-family: Georgia, 'Times New Roman', serif;
-    max-width: 640px;
-    margin: 0 auto;
-    padding: 48px 24px;
+  :root {
+    --bg: #191919;
+    --card: #1f1f1f;
+    --border: rgba(255,255,255,0.07);
+    --text: #e9e9e7;
+    --muted: #8a8a88;
+    --red: #ff7369;
+    --red-bg: rgba(255,115,105,0.09);
+    --red-border: rgba(255,115,105,0.22);
+    --green: #52b8a3;
+    --green-bg: rgba(82,184,163,0.08);
+    --green-border: rgba(82,184,163,0.22);
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    --serif: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
   }
-  h1 { font-size: 28px; font-weight: 600; margin-bottom: 4px; color: #fff; }
-  .subtitulo { color: #9b9b9b; font-size: 14px; margin-bottom: 32px;
-    font-family: -apple-system, 'Segoe UI', sans-serif; }
-  .linha { display: flex; justify-content: space-between; align-items: center;
-    padding: 14px 16px; margin-bottom: 8px; background: #202020;
-    border: 1px solid #2f2f2f; border-radius: 6px; }
-  .nome { font-size: 16px; }
-  .badge { font-size: 12px; padding: 3px 10px; border-radius: 12px; white-space: nowrap;
-    font-family: -apple-system, 'Segoe UI', sans-serif; }
-  .resumo-topo { color: #9b9b9b; font-size: 14px; margin-bottom: 24px;
-    font-family: -apple-system, 'Segoe UI', sans-serif; }
-  .resumo-topo .separador { margin: 0 8px; }
-  .tudo-livre { color: #4dd58a; font-size: 15px; padding: 16px;
-    background: rgba(45,194,117,0.08); border: 1px solid rgba(77,213,138,0.25);
-    border-radius: 6px; font-family: -apple-system, 'Segoe UI', sans-serif; }
-  .carregando, .erro { color: #9b9b9b; font-family: -apple-system, 'Segoe UI', sans-serif; }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--serif);
+    max-width: 620px;
+    margin: 0 auto;
+    padding: 64px 24px 80px;
+  }
+
+  header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+  }
+
+  h1 {
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: #fdfdfc;
+    margin: 0;
+  }
+
+  .fonte {
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .ao-vivo {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .ponto {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulsar 2s ease-in-out infinite;
+  }
+
+  @keyframes pulsar {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+
+  .stats {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+
+  .stat {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 20px;
+  }
+
+  .stat .numero {
+    font-family: var(--sans);
+    font-size: 32px;
+    font-weight: 600;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .stat .rotulo {
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .stat.repetidos .numero.tem-repetido { color: var(--red); }
+  .stat.repetidos .numero.sem-repetido { color: var(--green); }
+
+  .secao-titulo {
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .linha {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 16px;
+    margin-bottom: 6px;
+    background: var(--red-bg);
+    border: 1px solid var(--red-border);
+    border-left: 2px solid var(--red);
+    border-radius: 6px;
+  }
+
+  .nome {
+    font-size: 16px;
+    color: var(--text);
+  }
+
+  .contagem {
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--red);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .vazio {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px;
+    background: var(--green-bg);
+    border: 1px solid var(--green-border);
+    border-radius: 8px;
+    font-family: var(--sans);
+    font-size: 14px;
+    color: var(--green);
+  }
+
+  .carregando, .erro {
+    font-family: var(--sans);
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .erro { color: var(--red); }
 </style>
 </head>
 <body>
-  <h1>Checador de Duplicados</h1>
-  <div class="subtitulo">Nome do Artigo &middot; base de dados do Notion</div>
-  <div id="resumo-topo" class="resumo-topo"></div>
+  <header>
+    <h1>Checador de Duplicados</h1>
+    <span class="ao-vivo"><span class="ponto"></span>atualiza a cada 2s</span>
+  </header>
+  <div class="fonte" style="margin-bottom: 28px;">Propriedade "Nome do Artigo" &middot; base de dados do Notion</div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="numero" id="num-verificados">&mdash;</div>
+      <div class="rotulo">artigos verificados</div>
+    </div>
+    <div class="stat repetidos">
+      <div class="numero" id="num-repetidos">&mdash;</div>
+      <div class="rotulo">repetidos</div>
+    </div>
+  </div>
+
+  <div id="lista-titulo" class="secao-titulo" style="display:none;">Artigos repetidos</div>
   <div id="conteudo" class="carregando">Carregando...</div>
 
   <script>
@@ -43,7 +190,9 @@
         .then(r => r.json())
         .then(data => {
           const container = document.getElementById('conteudo');
-          const resumoTopo = document.getElementById('resumo-topo');
+          const listaTitulo = document.getElementById('lista-titulo');
+          const numVerificados = document.getElementById('num-verificados');
+          const numRepetidos = document.getElementById('num-repetidos');
 
           if (data.error) {
             container.className = 'erro';
@@ -55,23 +204,21 @@
           const nomes = Object.keys(contagem).sort((a, b) => a.localeCompare(b));
           const repetidos = nomes.filter(nome => contagem[nome] > 1);
 
-          resumoTopo.innerHTML = `
-            <span>${nomes.length} artigos verificados</span>
-            <span class="separador">&middot;</span>
-            <span style="color:${repetidos.length > 0 ? '#ff8080' : '#4dd58a'}">${repetidos.length} repetidos</span>
-          `;
+          numVerificados.textContent = nomes.length;
+          numRepetidos.textContent = repetidos.length;
+          numRepetidos.className = 'numero ' + (repetidos.length > 0 ? 'tem-repetido' : 'sem-repetido');
 
           let html = '';
           if (repetidos.length === 0) {
-            html = '<div class="tudo-livre">Nenhum artigo repetido encontrado.</div>';
+            listaTitulo.style.display = 'none';
+            html = '<div class="vazio">Nenhum artigo repetido no momento.</div>';
           } else {
+            listaTitulo.style.display = 'block';
             repetidos.forEach(nome => {
               const vezes = contagem[nome];
               html += `<div class="linha">
                 <span class="nome">${nome}</span>
-                <span class="badge" style="background:rgba(235,87,87,0.15); color:#ff8080; border:1px solid rgba(235,87,87,0.35);">
-                  Já foi lido &middot; usado ${vezes}x
-                </span>
+                <span class="contagem">usado ${vezes}x</span>
               </div>`;
             });
           }
