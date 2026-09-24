@@ -27,7 +27,7 @@
     background: var(--bg);
     color: var(--text);
     font-family: var(--serif);
-    max-width: 620px;
+    max-width: 580px;
     margin: 0 auto;
     padding: 64px 24px 80px;
   }
@@ -40,36 +40,40 @@
     margin: 0 0 32px;
   }
 
-  .stats {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 32px;
+  .hero {
+    padding: 32px 28px;
+    border-radius: 10px;
+    margin-bottom: 28px;
+    border: 1px solid;
   }
 
-  .stat {
-    flex: 1;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 18px 20px;
+  .hero.ok {
+    background: var(--green-bg);
+    border-color: var(--green-border);
   }
 
-  .stat .numero {
+  .hero.alerta {
+    background: var(--red-bg);
+    border-color: var(--red-border);
+  }
+
+  .hero .numero {
     font-family: var(--sans);
-    font-size: 32px;
+    font-size: 48px;
     font-weight: 600;
     line-height: 1;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
   }
 
-  .stat .rotulo {
+  .hero.ok .numero { color: var(--green); }
+  .hero.alerta .numero { color: var(--red); }
+
+  .hero .rotulo {
     font-family: var(--sans);
-    font-size: 13px;
-    color: var(--muted);
+    font-size: 14px;
+    color: var(--text);
+    opacity: 0.75;
   }
-
-  .stat.repetidos .numero.tem-repetido { color: var(--red); }
-  .stat.repetidos .numero.sem-repetido { color: var(--green); }
 
   .secao-titulo {
     font-family: var(--sans);
@@ -82,10 +86,10 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
-    padding: 9px 14px;
+    padding: 10px 14px;
     margin-bottom: 5px;
-    background: var(--red-bg);
-    border: 1px solid var(--red-border);
+    background: var(--card);
+    border: 1px solid var(--border);
     border-left: 2px solid var(--red);
     border-radius: 5px;
   }
@@ -98,7 +102,7 @@
   }
 
   .nome {
-    font-size: 14px;
+    font-size: 15px;
     color: var(--text);
   }
 
@@ -116,19 +120,6 @@
     color: var(--muted);
   }
 
-  .vazio {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 20px;
-    background: var(--green-bg);
-    border: 1px solid var(--green-border);
-    border-radius: 8px;
-    font-family: var(--sans);
-    font-size: 14px;
-    color: var(--green);
-  }
-
   .carregando, .erro {
     font-family: var(--sans);
     color: var(--muted);
@@ -141,33 +132,25 @@
 <body>
   <h1>Checador de Duplicados</h1>
 
-  <div class="stats">
-    <div class="stat">
-      <div class="numero" id="num-verificados">&mdash;</div>
-      <div class="rotulo">artigos verificados</div>
-    </div>
-    <div class="stat repetidos">
-      <div class="numero" id="num-repetidos">&mdash;</div>
-      <div class="rotulo">repetidos</div>
-    </div>
-  </div>
+  <div id="hero" class="hero"><div class="carregando">Carregando...</div></div>
 
   <div id="lista-titulo" class="secao-titulo" style="display:none;">Artigos repetidos</div>
-  <div id="conteudo" class="carregando">Carregando...</div>
+  <div id="conteudo"></div>
 
   <script>
     function atualizar() {
       fetch('/api/duplicados')
         .then(r => r.json())
         .then(data => {
-          const container = document.getElementById('conteudo');
+          const hero = document.getElementById('hero');
+          const conteudo = document.getElementById('conteudo');
           const listaTitulo = document.getElementById('lista-titulo');
-          const numVerificados = document.getElementById('num-verificados');
-          const numRepetidos = document.getElementById('num-repetidos');
 
           if (data.error) {
-            container.className = 'erro';
-            container.textContent = 'Erro: ' + JSON.stringify(data.error);
+            hero.className = 'hero alerta';
+            hero.innerHTML = '<div class="erro">Erro: ' + JSON.stringify(data.error) + '</div>';
+            conteudo.innerHTML = '';
+            listaTitulo.style.display = 'none';
             return;
           }
 
@@ -175,16 +158,23 @@
           const chaves = Object.keys(contagem).sort((a, b) => a.localeCompare(b));
           const repetidos = chaves.filter(chave => contagem[chave].count > 1);
 
-          numVerificados.textContent = data.total;
-          numRepetidos.textContent = repetidos.length;
-          numRepetidos.className = 'numero ' + (repetidos.length > 0 ? 'tem-repetido' : 'sem-repetido');
-
-          let html = '';
           if (repetidos.length === 0) {
+            hero.className = 'hero ok';
+            hero.innerHTML = `
+              <div class="numero">${data.total}</div>
+              <div class="rotulo">artigos analisados &middot; nenhuma repetição encontrada</div>
+            `;
             listaTitulo.style.display = 'none';
-            html = '<div class="vazio">Nenhum artigo repetido no momento.</div>';
+            conteudo.innerHTML = '';
           } else {
+            hero.className = 'hero alerta';
+            hero.innerHTML = `
+              <div class="numero">${repetidos.length}</div>
+              <div class="rotulo">artigo${repetidos.length > 1 ? 's' : ''} repetido${repetidos.length > 1 ? 's' : ''} encontrado${repetidos.length > 1 ? 's' : ''}</div>
+            `;
             listaTitulo.style.display = 'block';
+
+            let html = '';
             repetidos.forEach(chave => {
               const item = contagem[chave];
               const temVariacao = item.variantes.length > 1;
@@ -196,15 +186,13 @@
                 ${temVariacao ? `<span class="variantes">variações encontradas: ${item.variantes.map(v => '"' + v + '"').join(', ')}</span>` : ''}
               </div>`;
             });
+            conteudo.innerHTML = html;
           }
-
-          container.className = '';
-          container.innerHTML = html;
         })
         .catch(err => {
-          const container = document.getElementById('conteudo');
-          container.className = 'erro';
-          container.textContent = 'Erro ao carregar: ' + err.message;
+          const hero = document.getElementById('hero');
+          hero.className = 'hero alerta';
+          hero.innerHTML = '<div class="erro">Erro ao carregar: ' + err.message + '</div>';
         });
     }
 
