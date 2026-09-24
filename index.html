@@ -22,54 +22,72 @@
   .nome { font-size: 16px; }
   .badge { font-size: 12px; padding: 3px 10px; border-radius: 12px; white-space: nowrap;
     font-family: -apple-system, 'Segoe UI', sans-serif; }
-  .resumo { margin-top: 32px; padding-top: 16px; border-top: 1px solid #2f2f2f;
-    color: #9b9b9b; font-size: 13px; font-family: -apple-system, 'Segoe UI', sans-serif; }
+  .resumo-topo { color: #9b9b9b; font-size: 14px; margin-bottom: 24px;
+    font-family: -apple-system, 'Segoe UI', sans-serif; }
+  .resumo-topo .separador { margin: 0 8px; }
+  .tudo-livre { color: #4dd58a; font-size: 15px; padding: 16px;
+    background: rgba(45,194,117,0.08); border: 1px solid rgba(77,213,138,0.25);
+    border-radius: 6px; font-family: -apple-system, 'Segoe UI', sans-serif; }
   .carregando, .erro { color: #9b9b9b; font-family: -apple-system, 'Segoe UI', sans-serif; }
 </style>
 </head>
 <body>
   <h1>Checador de Duplicados</h1>
   <div class="subtitulo">Nome do Artigo &middot; base de dados do Notion</div>
+  <div id="resumo-topo" class="resumo-topo"></div>
   <div id="conteudo" class="carregando">Carregando...</div>
 
   <script>
-    fetch('/api/duplicados')
-      .then(r => r.json())
-      .then(data => {
-        const container = document.getElementById('conteudo');
-        if (data.error) {
+    function atualizar() {
+      fetch('/api/duplicados')
+        .then(r => r.json())
+        .then(data => {
+          const container = document.getElementById('conteudo');
+          const resumoTopo = document.getElementById('resumo-topo');
+
+          if (data.error) {
+            container.className = 'erro';
+            container.textContent = 'Erro: ' + JSON.stringify(data.error);
+            return;
+          }
+
+          const contagem = data.contagem;
+          const nomes = Object.keys(contagem).sort((a, b) => a.localeCompare(b));
+          const repetidos = nomes.filter(nome => contagem[nome] > 1);
+
+          resumoTopo.innerHTML = `
+            <span>${nomes.length} artigos verificados</span>
+            <span class="separador">&middot;</span>
+            <span style="color:${repetidos.length > 0 ? '#ff8080' : '#4dd58a'}">${repetidos.length} repetidos</span>
+          `;
+
+          let html = '';
+          if (repetidos.length === 0) {
+            html = '<div class="tudo-livre">Nenhum artigo repetido encontrado.</div>';
+          } else {
+            repetidos.forEach(nome => {
+              const vezes = contagem[nome];
+              html += `<div class="linha">
+                <span class="nome">${nome}</span>
+                <span class="badge" style="background:rgba(235,87,87,0.15); color:#ff8080; border:1px solid rgba(235,87,87,0.35);">
+                  Já foi lido &middot; usado ${vezes}x
+                </span>
+              </div>`;
+            });
+          }
+
+          container.className = '';
+          container.innerHTML = html;
+        })
+        .catch(err => {
+          const container = document.getElementById('conteudo');
           container.className = 'erro';
-          container.textContent = 'Erro: ' + JSON.stringify(data.error);
-          return;
-        }
-        const contagem = data.contagem;
-        const nomes = Object.keys(contagem).sort((a, b) => a.localeCompare(b));
-        let html = '';
-        let duplicados = 0;
-
-        nomes.forEach(nome => {
-          const vezes = contagem[nome];
-          const dup = vezes > 1;
-          if (dup) duplicados++;
-          const corFundo = dup ? 'rgba(235,87,87,0.15)' : 'rgba(45,194,117,0.12)';
-          const corTexto = dup ? '#ff8080' : '#4dd58a';
-          const corBorda = dup ? 'rgba(235,87,87,0.35)' : 'rgba(77,213,138,0.3)';
-          const status = dup ? `Já foi lido &middot; usado ${vezes}x` : 'Livre';
-          html += `<div class="linha">
-            <span class="nome">${nome}</span>
-            <span class="badge" style="background:${corFundo}; color:${corTexto}; border:1px solid ${corBorda};">${status}</span>
-          </div>`;
+          container.textContent = 'Erro ao carregar: ' + err.message;
         });
+    }
 
-        html += `<div class="resumo">${nomes.length} artigos verificados &middot; ${duplicados} repetidos</div>`;
-        container.className = '';
-        container.innerHTML = html;
-      })
-      .catch(err => {
-        const container = document.getElementById('conteudo');
-        container.className = 'erro';
-        container.textContent = 'Erro ao carregar: ' + err.message;
-      });
+    atualizar();
+    setInterval(atualizar, 2000);
   </script>
 </body>
 </html>
