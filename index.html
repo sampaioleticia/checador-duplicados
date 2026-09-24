@@ -32,49 +32,12 @@
     padding: 64px 24px 80px;
   }
 
-  header {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    margin-bottom: 40px;
-    flex-wrap: wrap;
-    gap: 8px 16px;
-  }
-
   h1 {
     font-size: 26px;
     font-weight: 600;
     letter-spacing: -0.01em;
     color: #fdfdfc;
-    margin: 0;
-  }
-
-  .fonte {
-    font-family: var(--sans);
-    font-size: 13px;
-    color: var(--muted);
-  }
-
-  .ao-vivo {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-family: var(--sans);
-    font-size: 12px;
-    color: var(--muted);
-  }
-
-  .ponto {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--green);
-    animation: pulsar 2s ease-in-out infinite;
-  }
-
-  @keyframes pulsar {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.35; }
+    margin: 0 0 32px;
   }
 
   .stats {
@@ -117,15 +80,21 @@
 
   .linha {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 16px;
+    flex-direction: column;
+    gap: 4px;
     padding: 14px 16px;
     margin-bottom: 6px;
     background: var(--red-bg);
     border: 1px solid var(--red-border);
     border-left: 2px solid var(--red);
     border-radius: 6px;
+  }
+
+  .linha-topo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
   }
 
   .nome {
@@ -139,6 +108,12 @@
     color: var(--red);
     white-space: nowrap;
     flex-shrink: 0;
+  }
+
+  .variantes {
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--muted);
   }
 
   .vazio {
@@ -164,11 +139,7 @@
 </style>
 </head>
 <body>
-  <header>
-    <h1>Checador de Duplicados</h1>
-    <span class="ao-vivo"><span class="ponto"></span>atualiza a cada 2s</span>
-  </header>
-  <div class="fonte" style="margin-bottom: 28px;">Propriedade "Nome do Artigo" &middot; base de dados do Notion</div>
+  <h1>Checador de Duplicados</h1>
 
   <div class="stats">
     <div class="stat">
@@ -201,10 +172,10 @@
           }
 
           const contagem = data.contagem;
-          const nomes = Object.keys(contagem).sort((a, b) => a.localeCompare(b));
-          const repetidos = nomes.filter(nome => contagem[nome] > 1);
+          const chaves = Object.keys(contagem).sort((a, b) => a.localeCompare(b));
+          const repetidos = chaves.filter(chave => contagem[chave].count > 1);
 
-          numVerificados.textContent = nomes.length;
+          numVerificados.textContent = chaves.length;
           numRepetidos.textContent = repetidos.length;
           numRepetidos.className = 'numero ' + (repetidos.length > 0 ? 'tem-repetido' : 'sem-repetido');
 
@@ -214,11 +185,15 @@
             html = '<div class="vazio">Nenhum artigo repetido no momento.</div>';
           } else {
             listaTitulo.style.display = 'block';
-            repetidos.forEach(nome => {
-              const vezes = contagem[nome];
+            repetidos.forEach(chave => {
+              const item = contagem[chave];
+              const temVariacao = item.variantes.length > 1;
               html += `<div class="linha">
-                <span class="nome">${nome}</span>
-                <span class="contagem">usado ${vezes}x</span>
+                <div class="linha-topo">
+                  <span class="nome">${item.exibicao}</span>
+                  <span class="contagem">usado ${item.count}x</span>
+                </div>
+                ${temVariacao ? `<span class="variantes">variações encontradas: ${item.variantes.map(v => '"' + v + '"').join(', ')}</span>` : ''}
               </div>`;
             });
           }
