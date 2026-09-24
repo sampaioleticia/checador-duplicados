@@ -42,9 +42,26 @@ export default async function handler(req, res) {
       cursor = data.next_cursor;
     }
 
+    const grupos = {};
+    for (const nomeOriginal of nomes) {
+      const nomeLimpo = nomeOriginal.trim();
+      const chave = nomeLimpo.toLowerCase();
+
+      if (!grupos[chave]) {
+        grupos[chave] = { count: 0, variantes: new Set() };
+      }
+      grupos[chave].count += 1;
+      grupos[chave].variantes.add(nomeLimpo);
+    }
+
     const contagem = {};
-    for (const nome of nomes) {
-      contagem[nome] = (contagem[nome] || 0) + 1;
+    for (const chave of Object.keys(grupos)) {
+      const variantesArray = Array.from(grupos[chave].variantes);
+      contagem[chave] = {
+        count: grupos[chave].count,
+        exibicao: variantesArray[0],
+        variantes: variantesArray
+      };
     }
 
     res.status(200).json({ contagem });
