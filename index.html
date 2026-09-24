@@ -81,13 +81,13 @@
   .linha {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    padding: 14px 16px;
-    margin-bottom: 6px;
+    gap: 2px;
+    padding: 9px 14px;
+    margin-bottom: 5px;
     background: var(--red-bg);
     border: 1px solid var(--red-border);
     border-left: 2px solid var(--red);
-    border-radius: 6px;
+    border-radius: 5px;
   }
 
   .linha-topo {
@@ -98,13 +98,13 @@
   }
 
   .nome {
-    font-size: 16px;
+    font-size: 14px;
     color: var(--text);
   }
 
   .contagem {
     font-family: var(--sans);
-    font-size: 12px;
+    font-size: 11px;
     color: var(--red);
     white-space: nowrap;
     flex-shrink: 0;
@@ -112,7 +112,7 @@
 
   .variantes {
     font-family: var(--sans);
-    font-size: 12px;
+    font-size: 11px;
     color: var(--muted);
   }
 
@@ -175,7 +175,7 @@
           const chaves = Object.keys(contagem).sort((a, b) => a.localeCompare(b));
           const repetidos = chaves.filter(chave => contagem[chave].count > 1);
 
-          numVerificados.textContent = chaves.length;
+          numVerificados.textContent = data.total;
           numRepetidos.textContent = repetidos.length;
           numRepetidos.className = 'numero ' + (repetidos.length > 0 ? 'tem-repetido' : 'sem-repetido');
 
